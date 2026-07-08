@@ -52,8 +52,10 @@ class TaskManager:
         或将数据放到其它磁盘）。"""
         data_dir = os.environ.get("V2M_DATA_DIR")
         if not data_dir:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            data_dir = os.path.join(current_dir, 'data')
+            # This module lives at <repo>/app/taskmanager.py; the data tree sits
+            # at the repo root (same place yoto_client and the routes read it).
+            repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            data_dir = os.path.join(repo_root, 'data')
         os.makedirs(data_dir, exist_ok=True)
         return data_dir
     

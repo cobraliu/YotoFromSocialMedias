@@ -91,6 +91,9 @@ desktop.ini
 
 # Yoto uploader
 .yoto/
+# Downloaded media tree + per-task info live at the repo root; never commit them
+# (real user data, source URLs, and large audio files) to this public repo.
+/data/
 data/*/yoto/
 data/yoto_icons/
 .pytest_cache/
