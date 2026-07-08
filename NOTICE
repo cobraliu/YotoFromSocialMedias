@@ -1,0 +1,15 @@
+YotoFromSocialMedias
+Copyright 2026 Rooney
+
+This product includes software developed as part of the YotoFromSocialMedias
+project, licensed under the Apache License, Version 2.0 (see LICENSE).
+
+--------------------------------------------------------------------------------
+Third-party components
+--------------------------------------------------------------------------------
+
+vendor/yoto_api
+    A fork of cdnninja/yoto_api (https://github.com/cdnninja/yoto_api),
+    vendored here as a git submodule. It is distributed under its own
+    upstream license (see vendor/yoto_api/LICENSE) and is NOT covered by
+    this project's Apache-2.0 license. Only its `Token` data model is used.

@@ -91,3 +91,12 @@ cd tests && python -m pytest -q
 Never committed: `.env` / per-user `client_id`, Yoto tokens under `.yoto/`,
 `cookies.txt` (site session cookies), logs, and the `data/` media tree. See
 `.gitignore`.
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE); see also
+[`NOTICE`](NOTICE) for attribution.
+
+The vendored fork at [`vendor/yoto_api`](vendor/yoto_api) is a git submodule
+and keeps its own upstream license (see `vendor/yoto_api/LICENSE`); it is not
+covered by this project's Apache-2.0 license.
