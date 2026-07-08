@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 · V2M</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; background: #12141a; color: #e6e6e6;
+      font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .card {
+      width: 100%; max-width: 360px; background: #1c1f27; border-radius: 12px;
+      padding: 28px 24px; box-shadow: 0 8px 40px rgba(0,0,0,.4);
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sub { color: #8b93a7; font-size: 13px; margin: 0 0 20px; }
+    label { display: block; font-size: 13px; margin: 12px 0 4px; color: #b9c0d0; }
+    input {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #333a4a;
+      background: #12141a; color: #e6e6e6; font-size: 14px;
+    }
+    input:focus { outline: none; border-color: #4caf50; }
+    button {
+      width: 100%; margin-top: 18px; padding: 11px; border: none; border-radius: 8px;
+      background: #4caf50; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: default; }
+    .toggle { text-align: center; margin-top: 14px; font-size: 13px; color: #8b93a7; }
+    .toggle a { color: #4caf50; cursor: pointer; text-decoration: none; }
+    .err { color: #ff6b6b; font-size: 13px; margin-top: 12px; min-height: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>登录</h1>
+    <p class="sub">登录以使用 V2M 下载与 Yoto 上传</p>
+    <label>用户名</label>
+    <input id="u" autocomplete="username" autofocus>
+    <label>密码</label>
+    <input id="p" type="password" autocomplete="current-password">
+    <button id="go">登录</button>
+    <div class="err" id="err"></div>
+    <div class="toggle">账号由管理员创建。如需账号请联系管理员。</div>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    async function submit() {
+      const username = $('u').value.trim(), password = $('p').value;
+      if (!username || !password) { $('err').textContent = '请输入用户名和密码'; return; }
+      $('go').disabled = true; $('err').textContent = '';
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({username, password})
+        });
+        if (r.ok) { location.href = '/'; return; }
+        const d = await r.json().catch(() => ({}));
+        $('err').textContent = d.detail || '登录失败';
+      } catch (e) { $('err').textContent = '网络错误'; }
+      $('go').disabled = false;
+    }
+    $('go').onclick = submit;
+    $('p').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  </script>
+</body>
+</html>

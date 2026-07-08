@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音视频下载器</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;
+  --s1:#141414;
+  --s2:#1d1d1d;
+  --bd:#272727;
+  --ac:#7c6af7;
+  --ac2:#a594f9;
+  --tx:#efefef;
+  --mu:#606060;
+  --ok:#22c55e;
+  --er:#f87171;
+}
+body{
+  background:var(--bg);color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:15px;line-height:1.5;min-height:100vh;padding-bottom:60px;
+}
+a{color:inherit;text-decoration:none}
+
+/* ── Header ── */
+.hdr{
+  background:var(--s1);border-bottom:1px solid var(--bd);
+  height:54px;display:flex;align-items:center;padding:0 20px;gap:12px;
+  position:sticky;top:0;z-index:50;
+}
+.hdr-logo{font-size:22px}
+.hdr h1{font-size:17px;font-weight:600}
+
+/* ── Wrap ── */
+.wrap{max-width:820px;margin:0 auto;padding:22px 16px}
+
+/* ── New-task trigger (header right) ── */
+.btn-new{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;margin-left:auto;
+  background:var(--ac);color:#fff;border:none;border-radius:8px;
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .15s;flex-shrink:0;
+}
+.btn-new:hover{background:var(--ac2)}
+.btn-new-ico{font-size:15px;line-height:1}
+
+/* ── Header user cluster ── */
+.hdr-user{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.yoto-chip{
+  padding:5px 11px;border-radius:20px;border:1px solid var(--bd);
+  background:var(--s2);color:var(--tx);font-size:12px;cursor:pointer;
+  white-space:nowrap;transition:border-color .15s,color .15s;
+}
+.yoto-chip.ok{border-color:var(--ok);color:var(--ok)}
+.yoto-chip.warn{border-color:#e0a63c;color:#e0a63c}
+a.yoto-chip{text-decoration:none;display:inline-block}
+a.yoto-chip:hover{border-color:var(--ac);color:var(--ac2)}
+.hdr-name{font-size:13px;color:var(--mu);white-space:nowrap}
+.hdr-logout{background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;padding:4px}
+.hdr-logout:hover{color:var(--er)}
+
+/* ── New-playlist button ── */
+.pl-add{
+  flex-shrink:0;width:40px;border:1px solid var(--bd);border-radius:8px;
+  background:var(--s2);color:var(--tx);font-size:20px;line-height:1;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.pl-add:hover{background:var(--ac);border-color:var(--ac);color:#fff}
+.pl-add:disabled{opacity:.5;cursor:default}
+
+/* ── Admin user list ── */
+.admin-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}
+.admin-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:8px}
+.admin-row .an{flex:1;font-size:13px}
+.admin-row .tag{font-size:11px;color:var(--ac2);border:1px solid var(--ac);border-radius:10px;padding:1px 7px}
+.admin-row button{background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;padding:3px}
+.admin-row button:hover{color:var(--tx)}
+.admin-row button.del:hover{color:var(--er)}
+
+/* ── Input card (legacy, used inside modal) ── */
+.in-hint{font-size:13px;color:var(--mu);margin-bottom:12px}
+.in-row{display:flex;gap:10px}
+.url-in{
+  flex:1;min-width:0;
+  background:var(--s2);border:1.5px solid var(--bd);border-radius:10px;
+  padding:11px 14px;color:var(--tx);font-size:15px;outline:none;
+  transition:border-color .15s;
+}
+.url-in:focus{border-color:var(--ac)}
+.url-in::placeholder{color:var(--mu)}
+.btn-dl{
+  background:var(--ac);color:#fff;border:none;border-radius:10px;
+  padding:11px 24px;font-size:15px;font-weight:600;cursor:pointer;
+  white-space:nowrap;flex-shrink:0;transition:background .15s,opacity .15s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-dl:hover{background:var(--ac2)}
+.btn-dl:disabled{opacity:.5;cursor:default}
+.in-err{font-size:13px;color:var(--er);margin-top:8px;display:none}
+
+/* ── Section ── */
+.sec{margin-bottom:22px}
+.sec-hd{
+  font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--mu);margin-bottom:10px;
+}
+.sec-hd-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.sec-hd-row .sec-hd{margin-bottom:0}
+.search-in{
+  flex:1;min-width:0;
+  background:var(--s2);border:1.5px solid var(--bd);border-radius:8px;
+  padding:6px 12px;color:var(--tx);font-size:13px;outline:none;
+  transition:border-color .15s;max-width:280px;margin-left:auto;
+}
+.search-in:focus{border-color:var(--ac)}
+.search-in::placeholder{color:var(--mu)}
+
+/* ── Task card ── */
+.tc{
+  background:var(--s1);border:1px solid var(--bd);border-radius:12px;
+  padding:14px 16px;margin-bottom:8px;transition:border-color .25s;
+}
+.tc.ok{border-color:rgba(34,197,94,.3)}
+.tc.er{border-color:rgba(248,113,113,.3)}
+
+.tc-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.tc-url{font-size:13px;color:var(--mu);flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:12px;padding:3px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.b-ing{background:rgba(124,106,247,.14);color:var(--ac2)}
+.b-ok {background:rgba(34,197,94,.14);color:var(--ok)}
+.b-er {background:rgba(248,113,113,.14);color:var(--er)}
+
+.pbar-bg{background:var(--s2);border-radius:3px;height:4px;margin-bottom:8px;overflow:hidden}
+.pbar-fg{height:100%;background:var(--ac);border-radius:3px;transition:width .4s,background .3s}
+.pbar-fg.ok{background:var(--ok)}
+.pbar-fg.er{background:var(--er)}
+
+.tc-st{font-size:13px;color:var(--mu)}
+.tc-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+.btn-s{
+  font-size:13px;padding:5px 13px;border-radius:8px;
+  border:1px solid var(--bd);background:var(--s2);color:var(--tx);
+  cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+  text-decoration:none;transition:background .12s;
+}
+.btn-s:hover{background:var(--bd)}
+.btn-s.ac{background:rgba(124,106,247,.1);border-color:rgba(124,106,247,.35);color:var(--ac2)}
+.btn-s.danger{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25);color:var(--er)}
+
+.log-tog{font-size:12px;color:var(--mu);cursor:pointer;margin-top:6px;
+  display:inline-flex;align-items:center;gap:4px;user-select:none}
+.log-tog:hover{color:var(--tx)}
+.log-box{display:none;margin-top:8px;background:#060606;border-radius:8px;
+  padding:10px;max-height:130px;overflow-y:auto}
+.log-box.open{display:block}
+.log-ln{font-size:11.5px;font-family:monospace;color:var(--mu);line-height:1.7}
+
+/* ── History ── */
+.hi{
+  background:var(--s1);border:1px solid var(--bd);border-radius:12px;
+  padding:12px 14px;margin-bottom:8px;
+  display:flex;align-items:center;gap:12px;
+}
+.hi-ico{font-size:20px;flex-shrink:0;width:28px;text-align:center}
+.hi-info{flex:1;min-width:0}
+.hi-url{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.hi-meta{font-size:12px;color:var(--mu)}
+.hi-acts{display:flex;gap:6px;flex-shrink:0}
+
+/* ── Pager ── */
+.pager{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+.pager-btn{
+  font-size:13px;min-width:34px;height:34px;padding:0 10px;
+  border-radius:8px;border:1px solid var(--bd);background:var(--s2);
+  color:var(--tx);cursor:pointer;transition:background .12s;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.pager-btn:hover:not(:disabled){background:var(--bd)}
+.pager-btn:disabled{opacity:.35;cursor:default}
+.pager-btn.cur{background:rgba(124,106,247,.2);border-color:rgba(124,106,247,.5);color:var(--ac2)}
+.pager-info{font-size:12px;color:var(--mu);padding:0 4px}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:44px 20px;color:var(--mu)}
+.empty-ico{font-size:36px;margin-bottom:10px}
+.empty-tx{font-size:14px}
+
+/* ── Spinner ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{
+  display:inline-block;width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.2);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;
+}
+
+/* ── Link modal ── */
+.lm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.72);
+  display:flex;align-items:center;justify-content:center;
+  z-index:900;padding:20px;
+}
+.lm-box{
+  background:var(--s1);border:1px solid var(--bd);border-radius:16px;
+  padding:22px;width:100%;max-width:480px;
+  max-height:90vh;overflow:auto;
+}
+.lm-hd{font-size:14px;font-weight:600;margin-bottom:12px}
+.yi-tab.active{background:#4caf50;color:#fff}
+.lm-hint{font-size:12px;color:var(--mu);margin-bottom:8px}
+.lm-url{
+  width:100%;background:var(--s2);border:1.5px solid var(--bd);
+  border-radius:8px;padding:10px 12px;color:var(--tx);
+  font-size:12px;font-family:monospace;outline:none;
+  resize:none;line-break:anywhere;
+}
+.lm-url:focus{border-color:var(--ac)}
+.lm-foot{display:flex;justify-content:flex-end;margin-top:14px}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:var(--s1);border:1px solid var(--bd);border-radius:10px;
+  padding:9px 20px;font-size:13px;
+  opacity:0;pointer-events:none;z-index:999;
+  transition:opacity .2s,transform .2s;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.er{border-color:rgba(248,113,113,.4);color:var(--er)}
+
+/* ── Responsive ── */
+@media(max-width:560px){
+  .in-row{flex-direction:column}
+  .btn-dl{justify-content:center}
+  .hi{flex-wrap:wrap}
+  .hi-acts{width:100%;justify-content:flex-end}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <span class="hdr-logo">🎵</span>
+  <h1>音视频下载器</h1>
+  <button class="btn-new" onclick="openDlModal()">
+    <span class="btn-new-ico">+</span> 新建下载
+  </button>
+  <div class="hdr-user" id="hdr-user" style="display:none">
+    <button class="yoto-chip" id="admin-btn" onclick="openAdminModal()" style="display:none" title="用户管理">用户管理</button>
+    <a class="yoto-chip" id="playlists-link" href="/yoto/playlists" style="display:none" title="查看 Yoto 歌单">我的歌单</a>
+    <button class="yoto-chip" id="yoto-chip" onclick="openBindModal()" title="管理 Yoto 账号绑定">Yoto: …</button>
+    <span class="hdr-name" id="hdr-name"></span>
+    <button class="hdr-logout" onclick="doLogout()">退出</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div id="active-sec" class="sec" style="display:none">
+    <div class="sec-hd">进行中</div>
+    <div id="active-list"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hd-row">
+      <span class="sec-hd">历史记录</span>
+      <input id="hist-q" class="search-in" type="search"
+             placeholder="搜索 URL 或文件名…" autocomplete="off"
+             oninput="onHistSearch()">
+    </div>
+    <div id="hist-pager-top" class="pager" style="display:none"></div>
+    <div id="hist-list">
+      <div class="empty"><div class="empty-ico">📭</div><div class="empty-tx">暂无记录</div></div>
+    </div>
+    <div id="hist-pager" class="pager" style="display:none"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="link-modal" class="lm-overlay" style="display:none" onclick="if(event.target===this)closeLinkModal()">
+  <div class="lm-box">
+    <div class="lm-hd">复制链接</div>
+    <div class="lm-hint">长按或点击文本框全选，然后复制</div>
+    <textarea id="lm-url" class="lm-url" rows="3" readonly
+      onclick="this.select()" onfocus="this.select()"></textarea>
+    <div class="lm-foot">
+      <button class="btn-s" onclick="closeLinkModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="dl-modal" class="lm-overlay" style="display:none" onclick="if(event.target===this)closeDlModal()">
+  <div class="lm-box">
+    <div class="lm-hd">新建下载</div>
+    <div class="in-hint">支持 YouTube · 抖音 · QQ 音乐 · B 站 — 直接粘贴链接或分享文字</div>
+    <input id="url-in" class="url-in" type="text"
+           placeholder="https:// 或分享文字…" autocomplete="off" autocorrect="off">
+    <div id="in-err" class="in-err"></div>
+    <div class="lm-foot" style="gap:8px">
+      <button class="btn-s" onclick="closeDlModal()">取消</button>
+      <button id="dl-btn" class="btn-dl" onclick="submitDownload()">下载</button>
+    </div>
+  </div>
+</div>
+
+<div id="yoto-modal" class="lm-overlay" style="display:none" onclick="if(event.target===this)closeYotoModal()">
+  <div class="lm-box">
+    <div class="lm-hd">上传到 Yoto</div>
+    <div class="lm-hint">上传前自动限码率（96k）并按 5 分钟切分，追加到所选 playlist。</div>
+    <label class="in-hint" style="display:block;margin-bottom:4px">文件名</label>
+    <input id="yoto-filename" class="url-in" type="text" autocomplete="off" style="width:100%">
+    <label class="in-hint" style="display:block;margin:10px 0 4px">Playlist</label>
+    <div style="display:flex;gap:8px">
+      <select id="yoto-playlist" class="url-in" style="flex:1"><option>加载中…</option></select>
+      <button type="button" id="yoto-pl-new" class="pl-add" onclick="createPlaylist()" title="新建 playlist">+</button>
+    </div>
+    <label class="in-hint" style="display:block;margin:10px 0 4px">图标（可选）</label>
+    <div id="yoto-icon-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+      <button type="button" class="btn-s yi-tab" data-src="yoto" onclick="switchIconTab('yoto')">Yoto图标</button>
+      <button type="button" class="btn-s yi-tab" data-src="me" onclick="switchIconTab('me')">我的图标</button>
+      <button type="button" class="btn-s yi-tab" data-src="ext" onclick="switchIconTab('ext')">yotoicons搜索</button>
+    </div>
+    <input id="yoto-icon-q" class="url-in" type="text" placeholder="搜索图标关键字，如 car"
+           style="margin-bottom:6px" onkeydown="if(event.key==='Enter'){event.preventDefault();runIconSearch();}">
+    <div id="yoto-icon-grid" style="display:flex;flex-wrap:wrap;gap:6px;max-height:184px;overflow:auto;min-height:20px"></div>
+    <div id="yoto-progress" class="lm-hint" style="margin-top:10px;min-height:16px"></div>
+    <div class="lm-foot" style="gap:8px">
+      <button class="btn-s" onclick="closeYotoModal()">取消</button>
+      <button id="yoto-go" class="btn-dl" onclick="submitYoto()">上传</button>
+    </div>
+  </div>
+</div>
+
+<div id="bind-modal" class="lm-overlay" style="display:none" onclick="if(event.target===this)closeBindModal()">
+  <div class="lm-box">
+    <div class="lm-hd">Yoto 账号绑定</div>
+    <div class="lm-hint">绑定你自己的 Yoto client_id，并完成一次登录授权。图标与 playlist 都会使用你自己的账号。</div>
+
+    <label class="in-hint" style="display:block;margin:10px 0 4px">1 · 你的 client_id</label>
+    <div style="display:flex;gap:8px">
+      <input id="bind-cid" class="url-in" type="text" autocomplete="off" placeholder="Yoto client_id">
+      <button class="btn-s" onclick="bindYoto()">绑定</button>
+    </div>
+
+    <label class="in-hint" style="display:block;margin:14px 0 4px">2 · 登录授权</label>
+    <div style="display:flex;gap:8px">
+      <button class="btn-s" onclick="getAuthUrl()">获取登录链接</button>
+      <span id="bind-status" class="lm-hint" style="align-self:center"></span>
+    </div>
+
+    <label class="in-hint" style="display:block;margin:14px 0 4px">3 · 粘贴回调地址（127.0.0.1:8787/callback?...）</label>
+    <textarea id="bind-code" class="lm-url" rows="2" placeholder="粘贴浏览器跳转后的完整地址或 code"></textarea>
+    <div class="lm-foot" style="gap:8px;margin-top:10px">
+      <button class="btn-s" onclick="closeBindModal()">关闭</button>
+      <button class="btn-dl" onclick="completeAuth()">完成登录</button>
+    </div>
+  </div>
+</div>
+
+<div id="admin-modal" class="lm-overlay" style="display:none" onclick="if(event.target===this)closeAdminModal()">
+  <div class="lm-box">
+    <div class="lm-hd">用户管理</div>
+    <div class="lm-hint">只有管理员可以创建账号。删除用户会一并清除其 Yoto 绑定与图标。</div>
+
+    <label class="in-hint" style="display:block;margin:10px 0 4px">新建用户</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="au-name" class="url-in" style="flex:1;min-width:120px" type="text" placeholder="用户名" autocomplete="off">
+      <input id="au-pass" class="url-in" style="flex:1;min-width:120px" type="text" placeholder="初始密码" autocomplete="off">
+      <label class="in-hint" style="display:flex;align-items:center;gap:4px;white-space:nowrap">
+        <input id="au-admin" type="checkbox"> 管理员
+      </label>
+      <button class="btn-s" onclick="adminCreateUser()">创建</button>
+    </div>
+
+    <div id="admin-user-list" class="admin-list" style="margin-top:14px"></div>
+    <div class="lm-foot" style="margin-top:12px">
+      <button class="btn-s" onclick="closeAdminModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Auth guard: any /api/ 401 → back to /login ───────────
+const _fetch = window.fetch.bind(window);
+window.fetch = async (input, init) => {
+  const resp = await _fetch(input, init);
+  try {
+    const url = typeof input === 'string' ? input : (input && input.url);
+    if (resp.status === 401 && url && url.indexOf('/api/') !== -1) {
+      location.href = '/login';
+    }
+  } catch (e) {}
+  return resp;
+};
+const polling  = {};   // taskId → intervalId
+const taskMeta = {};   // taskId → {url}
+
+// ─── Submit ───────────────────────────────────────────────
+async function submitDownload() {
+  const inp = document.getElementById('url-in');
+  const btn = document.getElementById('dl-btn');
+  const err = document.getElementById('in-err');
+  const url = inp.value.trim();
+
+  err.style.display = 'none';
+  if (!url) { showErr('请输入链接'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+  try {
+    const r = await fetch('/api/download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '请求失败');
+    inp.value = '';
+    closeDlModal();
+    beginTask(d.task_id, url);
+  } catch (e) {
+    showErr(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '下载';
+  }
+}
+
+// ─── Download modal ───────────────────────────────────────
+function openDlModal(prefill) {
+  document.getElementById('in-err').style.display = 'none';
+  const inp = document.getElementById('url-in');
+  if (prefill !== undefined) inp.value = prefill;
+  document.getElementById('dl-modal').style.display = 'flex';
+  setTimeout(() => { inp.focus(); inp.select(); }, 60);
+}
+function closeDlModal() {
+  document.getElementById('dl-modal').style.display = 'none';
+}
+
+function showErr(msg) {
+  const el = document.getElementById('in-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+document.getElementById('url-in').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitDownload();
+});
+
+// Esc 关闭任意 modal
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const dl = document.getElementById('dl-modal');
+  const lm = document.getElementById('link-modal');
+  if (dl.style.display === 'flex') closeDlModal();
+  else if (lm.style.display === 'flex') closeLinkModal();
+});
+
+// ─── Task polling ─────────────────────────────────────────
+function beginTask(id, url) {
+  taskMeta[id] = { url };
+  saveActive(id, url);
+  renderTask(id, { task_id: id, progress: 0, status: '排队中…', is_downloading: true });
+  polling[id] = setInterval(() => pollOnce(id), 2000);
+}
+
+async function pollOnce(id) {
+  try {
+    const r = await fetch(`/api/status/${id}`);
+    if (!r.ok) return;
+    const s = await r.json();
+    if (!s.is_downloading) {
+      clearInterval(polling[id]);
+      delete polling[id];
+      removeActive(id);
+      const el = document.getElementById('tc-' + id);
+      if (el) el.remove();
+      syncActiveSec();
+      // Failure toast for visibility
+      if (!s.success) showToast('下载失败：' + (s.status || ''), 'er');
+      loadHist();
+      return;
+    }
+    renderTask(id, s);
+  } catch (_) {}
+}
+
+function renderTask(id, s) {
+  const list = document.getElementById('active-list');
+  let card   = document.getElementById('tc-' + id);
+
+  const done = !s.is_downloading && s.success;
+  const err  = !s.is_downloading && !s.success;
+  const pct  = s.progress || 0;
+  const url  = taskMeta[id]?.url || id;
+
+  const cardCls  = done ? 'ok' : err ? 'er' : '';
+  const badgeCls = done ? 'b-ok' : err ? 'b-er' : 'b-ing';
+  const badgeTx  = done ? '完成' : err ? '失败' : pct + '%';
+  const barCls   = done ? 'ok'  : err ? 'er'  : '';
+  const barW     = (done || err) ? 100 : pct;
+
+  const logs = (s.log_messages || []).slice(-6)
+    .map(l => `<div class="log-ln">${esc(l)}</div>`).join('');
+
+  let acts = '';
+  if (done) {
+    if (s.has_audio) acts += `<a class="btn-s ac" href="/api/download/${id}/audio" download>⬇ 音频</a>`;
+    if (s.has_video) acts += `<a class="btn-s" href="/api/download/${id}/video" download>⬇ 视频</a>`;
+    acts += `<a class="btn-s" href="/task/${id}">✂ 剪辑</a>`;
+    if (s.has_audio) acts += `<button class="btn-s" onclick="openYotoModal('${id}', '${(s.audio_filename||'').replace(/'/g,"\\'")}')" title="上传到 Yoto">⬆ Yoto</button>`;
+  }
+
+  const html = `
+    <div class="tc-top">
+      <span class="tc-url" title="${esc(url)}">${esc(url)}</span>
+      <span class="badge ${badgeCls}">${badgeTx}</span>
+    </div>
+    <div class="pbar-bg"><div class="pbar-fg ${barCls}" style="width:${barW}%"></div></div>
+    <div class="tc-st">${esc(s.status || '')}</div>
+    ${acts ? `<div class="tc-acts">${acts}</div>` : ''}
+    ${logs ? `
+      <span class="log-tog" onclick="toggleLog('${id}')">▸ 日志</span>
+      <div id="log-${id}" class="log-box">${logs}</div>` : ''}
+  `;
+
+  if (!card) {
+    card = document.createElement('div');
+    card.id = 'tc-' + id;
+    list.prepend(card);
+  }
+  card.className = `tc ${cardCls}`;
+  card.innerHTML = html;
+  syncActiveSec();
+}
+
+function syncActiveSec() {
+  const sec = document.getElementById('active-sec');
+  sec.style.display = document.getElementById('active-list').children.length ? 'block' : 'none';
+}
+
+function toggleLog(id) {
+  const el = document.getElementById('log-' + id);
+  if (el) el.classList.toggle('open');
+}
+
+// ─── Persist active tasks across refresh ─────────────────
+function saveActive(id, url) {
+  const list = getActiveStore();
+  if (!list.find(t => t.id === id)) list.push({ id, url });
+  localStorage.setItem('activeTasks', JSON.stringify(list));
+}
+function removeActive(id) {
+  const list = getActiveStore().filter(t => t.id !== id);
+  localStorage.setItem('activeTasks', JSON.stringify(list));
+}
+function getActiveStore() {
+  try { return JSON.parse(localStorage.getItem('activeTasks') || '[]'); } catch (_) { return []; }
+}
+function restoreActive() {
+  getActiveStore().forEach(({ id, url }) => {
+    taskMeta[id] = { url };
+    // Check if already finished
+    fetch(`/api/status/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(s => {
+        if (!s) { removeActive(id); return; }
+        if (!s.is_downloading) {
+          removeActive(id);
+          loadHist();
+          return;
+        }
+        renderTask(id, s);
+        polling[id] = setInterval(() => pollOnce(id), 2000);
+      })
+      .catch(() => removeActive(id));
+  });
+}
+
+// ─── History ──────────────────────────────────────────────
+let histPage = 1;
+let histQuery = '';
+let histSearchTimer = null;
+const HIST_PAGE_SIZE = 20;
+
+async function loadHist(page) {
+  if (page !== undefined) histPage = page;
+  try {
+    const params = new URLSearchParams({
+      page: histPage, page_size: HIST_PAGE_SIZE,
+    });
+    if (histQuery) params.set('q', histQuery);
+    const r = await fetch(`/api/history/data?${params}`);
+    const data = await r.json();
+    renderHist(data.items || []);
+    renderPager(data);
+  } catch (_) {}
+}
+
+function onHistSearch() {
+  clearTimeout(histSearchTimer);
+  histSearchTimer = setTimeout(() => {
+    const v = document.getElementById('hist-q').value.trim();
+    if (v === histQuery) return;
+    histQuery = v;
+    histPage = 1;
+    loadHist();
+  }, 250);
+}
+
+function renderHist(items) {
+  const el = document.getElementById('hist-list');
+  if (!items?.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">📭</div><div class="empty-tx">暂无记录</div></div>`;
+    return;
+  }
+  el.innerHTML = items.map(t => {
+    const icon  = t.success ? '🎵' : '❌';
+    const url   = t.url || t.task_id;
+    const short = url.length > 60 ? url.slice(0, 60) + '…' : url;
+    const meta  = [t.start_time, t.audio_filename].filter(Boolean).join(' · ');
+    return `
+    <div class="hi" id="hi-${t.task_id}">
+      <span class="hi-ico">${icon}</span>
+      <div class="hi-info">
+        <div class="hi-url" title="${esc(url)}">${esc(short)}</div>
+        <div class="hi-meta">${esc(meta)}</div>
+      </div>
+      <div class="hi-acts">
+        ${t.has_audio ? `<a class="btn-s ac" href="/api/download/${t.task_id}/audio.mp3" download title="下载音频">⬇</a>` : ''}
+        ${t.has_audio ? `<button class="btn-s" onclick="copyLink('/api/download/${t.task_id}/audio.mp3')" title="复制链接">🔗</button>` : ''}
+        ${t.has_audio ? `<button class="btn-s" onclick="openYotoModal('${t.task_id}', '${esc(t.audio_filename || '')}')" title="上传到 Yoto">⬆</button>` : ''}
+        ${(t.has_audio || t.has_video) ? `<a class="btn-s" href="/task/${t.task_id}" title="详情/剪辑">✂</a>` : ''}
+        <button class="btn-s" onclick="retryTask('${esc(url)}')" title="重新下载">↺</button>
+        <button class="btn-s danger" onclick="delTask('${t.task_id}')" title="删除">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPager(data) {
+  const total = data.total_pages || 1;
+  const cur   = data.page || 1;
+  const els   = [document.getElementById('hist-pager-top'),
+                 document.getElementById('hist-pager')];
+
+  if (total <= 1) { els.forEach(e => e.style.display = 'none'); return; }
+
+  let html = `<button class="pager-btn" onclick="loadHist(1)" ${cur===1?'disabled':''}>«</button>`;
+  html += `<button class="pager-btn" onclick="loadHist(${cur-1})" ${cur===1?'disabled':''}>‹</button>`;
+
+  // show up to 5 page numbers centered around current
+  const lo = Math.max(1, cur - 2);
+  const hi = Math.min(total, cur + 2);
+  for (let p = lo; p <= hi; p++) {
+    html += `<button class="pager-btn${p===cur?' cur':''}" onclick="loadHist(${p})">${p}</button>`;
+  }
+
+  html += `<button class="pager-btn" onclick="loadHist(${cur+1})" ${cur===total?'disabled':''}>›</button>`;
+  html += `<button class="pager-btn" onclick="loadHist(${total})" ${cur===total?'disabled':''}>»</button>`;
+  html += `<span class="pager-info">${cur} / ${total} 页 · 共 ${data.total} 条</span>`;
+
+  els.forEach(e => { e.style.display = 'flex'; e.innerHTML = html; });
+}
+
+function retryTask(url) {
+  openDlModal(url);
+}
+
+async function delTask(id) {
+  if (!confirm('确定删除此任务及所有文件？')) return;
+  try {
+    await fetch(`/api/delete-task/${id}`, { method: 'DELETE' });
+    // If we deleted the only item on a non-first page, go back one page
+    const remaining = document.querySelectorAll('.hi').length - 1;
+    if (remaining === 0 && histPage > 1) histPage--;
+    loadHist();
+  } catch (_) {
+    showToast('删除失败', 'er');
+  }
+}
+
+// ─── Toast ────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+
+// ─── Copy link ────────────────────────────────────────────
+function copyLink(path) {
+  const url = location.origin + path;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showToast('链接已复制'))
+      .catch(() => showLinkModal(url));
+  } else {
+    showLinkModal(url);
+  }
+}
+function showLinkModal(url) {
+  const ta = document.getElementById('lm-url');
+  ta.value = url;
+  document.getElementById('link-modal').style.display = 'flex';
+  setTimeout(() => { ta.focus(); ta.select(); }, 80);
+}
+function closeLinkModal() {
+  document.getElementById('link-modal').style.display = 'none';
+}
+
+// ─── Utils ────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ─── Yoto upload ──────────────────────────────────────────
+let yotoTaskId = null, yotoTrimId = null, yotoPoll = null, yotoIcon = null, yotoIconTab = 'yoto';
+let iconSearching = false;   // guards against overlapping icon-search submits
+let lastIconKey = null, lastIconAt = 0;   // throttle identical re-submits (5s)
+
+// Upload the task's full audio.
+async function openYotoModal(taskId, filename) {
+  yotoTaskId = taskId; yotoTrimId = null;
+  return _openYotoModal(filename);
+}
+
+// Upload a trimmed segment (from the task-details page, via /?yoto_trim=…).
+async function openYotoTrimModal(trimId, filename) {
+  yotoTaskId = null; yotoTrimId = trimId;
+  return _openYotoModal(filename);
+}
+
+async function _openYotoModal(filename) {
+  if (!yotoStatus || !yotoStatus.authed) {
+    showToast('请先绑定并登录 Yoto 账号', 'er');
+    openBindModal();
+    return;
+  }
+  document.getElementById('yoto-filename').value =
+    (filename || '').replace(/\.[^.]+$/, '');
+  document.getElementById('yoto-progress').textContent = '';
+  document.getElementById('yoto-go').disabled = false;
+  yotoIcon = null; yotoIconTab = 'yoto';
+  document.getElementById('yoto-icon-q').value = '';
+  switchIconTab('yoto');
+  const sel = document.getElementById('yoto-playlist');
+  sel.innerHTML = '<option>加载中…</option>';
+  document.getElementById('yoto-modal').style.display = 'flex';
+  try {
+    const r = await fetch('/api/yoto/playlists');
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || '加载失败');
+    if (!d.playlists.length) { sel.innerHTML = '<option value="">（无 playlist）</option>'; return; }
+    sel.innerHTML = d.playlists.map(p => {
+      const secs = p.duration || 0;
+      const dur = secs ? ` · ${Math.floor(secs / 60)}分钟` : '';
+      return `<option value="${p.id}">${esc(p.title)}${dur}</option>`;
+    }).join('');
+  } catch (e) {
+    sel.innerHTML = '<option value="">加载失败</option>';
+    document.getElementById('yoto-progress').textContent = '无法加载 playlist：' + e.message;
+  }
+}
+
+function closeYotoModal() {
+  document.getElementById('yoto-modal').style.display = 'none';
+  if (yotoPoll) { clearInterval(yotoPoll); yotoPoll = null; }
+}
+
+async function createPlaylist() {
+  const title = (prompt('新 playlist 名称：') || '').trim();
+  if (!title) return;
+  const btn = document.getElementById('yoto-pl-new');
+  const sel = document.getElementById('yoto-playlist');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/yoto/playlists', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || d.detail || '创建失败');
+    // drop any "（无 playlist）/加载失败" placeholder, prepend the new one, select it
+    const ph = sel.querySelector('option[value=""]');
+    if (ph) ph.remove();
+    const opt = document.createElement('option');
+    opt.value = d.id; opt.textContent = d.title;
+    sel.insertBefore(opt, sel.firstChild);
+    sel.value = d.id;
+    showToast('已创建 playlist');
+  } catch (e) { showToast(e.message, 'er'); }
+  btn.disabled = false;
+}
+
+// ─── Yoto icon picker ─────────────────────────────────────
+function switchIconTab(src) {
+  yotoIconTab = src;
+  document.querySelectorAll('.yi-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.src === src));
+  const q = document.getElementById('yoto-icon-q');
+  q.style.display = (src === 'me') ? 'none' : '';
+  runIconSearch();
+}
+
+function iconThumbURL(it) {
+  if (it.thumb) return 'https://www.yotoicons.com' + it.thumb;   // external
+  return '/api/yoto/icons/thumb?media_id=' + encodeURIComponent(it.mediaId);
+}
+
+function renderIcons(items, external) {
+  const grid = document.getElementById('yoto-icon-grid');
+  grid.innerHTML = '';
+  items.forEach(it => {
+    const img = document.createElement('img');
+    img.src = iconThumbURL(it);
+    img.title = it.title || it.id || '';
+    img.loading = 'lazy';
+    img.style.cssText =
+      'width:40px;height:40px;image-rendering:pixelated;border:2px solid transparent;border-radius:4px;cursor:pointer;background:#222';
+    if (!external && yotoIcon === it.mediaId) img.style.borderColor = '#4caf50';
+    img.onclick = () => external
+      ? importExternalIcon(it.id)
+      : selectIcon(it.mediaId, grid, img);
+    grid.appendChild(img);
+  });
+  if (!items.length) grid.innerHTML = '<span class="lm-hint">无结果</span>';
+}
+
+function selectIcon(mediaId, grid, img) {
+  yotoIcon = mediaId;
+  grid.querySelectorAll('img').forEach(i => i.style.borderColor = 'transparent');
+  img.style.borderColor = '#4caf50';
+}
+
+async function runIconSearch() {
+  // Ignore re-submits until the in-flight search returns, so a double-Enter
+  // can't race two overlapping requests whose results arrive out of order.
+  if (iconSearching) return;
+  const q = document.getElementById('yoto-icon-q').value.trim();
+  const key = yotoIconTab + '\x00' + q;
+  // Same tab + keyword: block re-submit within 5s of the last one. Changing
+  // the keyword (or tab) makes a new key and is allowed immediately.
+  if (key === lastIconKey && (Date.now() - lastIconAt) < 5000) return;
+  lastIconKey = key; lastIconAt = Date.now();
+  iconSearching = true;
+  const grid = document.getElementById('yoto-icon-grid');
+  grid.innerHTML = '<span class="lm-hint">加载中…</span>';
+  try {
+    if (yotoIconTab === 'ext') {
+      if (!q) { grid.innerHTML = '<span class="lm-hint">输入关键字搜索</span>'; return; }
+      const r = await fetch('/api/yoto/icons/search-external?q=' + encodeURIComponent(q));
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || '搜索失败');
+      renderIcons(d.icons, true);
+    } else {
+      const r = await fetch('/api/yoto/icons?source=' + yotoIconTab +
+                            '&q=' + encodeURIComponent(q));
+      const d = await r.json();
+      renderIcons(d.icons, false);
+    }
+  } catch (e) {
+    grid.innerHTML = '<span class="lm-hint">' + e.message + '</span>';
+  } finally {
+    iconSearching = false;
+  }
+}
+
+async function importExternalIcon(iconId) {
+  const grid = document.getElementById('yoto-icon-grid');
+  grid.innerHTML = '<span class="lm-hint">导入中…</span>';
+  try {
+    const r = await fetch('/api/yoto/icons/import', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({icon_id: iconId})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '导入失败');
+    yotoIcon = d.mediaId;
+    switchIconTab('me');          // now lives under 我的图标, selected
+  } catch (e) { grid.innerHTML = '<span class="lm-hint">' + e.message + '</span>'; }
+}
+
+async function submitYoto() {
+  const filename = document.getElementById('yoto-filename').value.trim();
+  const playlist_id = document.getElementById('yoto-playlist').value;
+  if (!playlist_id) { showToast('请选择 playlist', 'er'); return; }
+  document.getElementById('yoto-go').disabled = true;
+  const prog = document.getElementById('yoto-progress');
+  prog.textContent = '提交中…';
+  try {
+    const body = {filename, playlist_id, icon_media_id: yotoIcon};
+    if (yotoTrimId) body.trim_id = yotoTrimId; else body.task_id = yotoTaskId;
+    const r = await fetch('/api/yoto/upload', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || '提交失败');
+    yotoPoll = setInterval(() => pollYoto(d.job_id), 1200);
+  } catch (e) {
+    prog.textContent = '错误：' + e.message;
+    document.getElementById('yoto-go').disabled = false;
+  }
+}
+
+async function pollYoto(jobId) {
+  try {
+    const r = await fetch('/api/yoto/upload-status/' + jobId);
+    const s = await r.json();
+    document.getElementById('yoto-progress').textContent =
+      `${s.progress}% · ${s.status}`;
+    if (s.done) {
+      clearInterval(yotoPoll); yotoPoll = null;
+      if (s.success) { showToast('已上传到 Yoto'); closeYotoModal(); }
+      else { showToast('上传失败：' + s.status, 'er');
+             document.getElementById('yoto-go').disabled = false; }
+    }
+  } catch (e) { /* keep polling */ }
+}
+
+// ─── User / Yoto binding ──────────────────────────────────
+let yotoStatus = null;
+
+async function boot() {
+  let me;
+  try {
+    const r = await fetch('/api/auth/me');
+    if (!r.ok) { location.href = '/login'; return; }
+    me = await r.json();
+  } catch (e) { location.href = '/login'; return; }
+  document.getElementById('hdr-name').textContent = me.username || '';
+  document.getElementById('hdr-user').style.display = 'flex';
+  if (me.is_admin) document.getElementById('admin-btn').style.display = '';
+  await refreshYotoStatus();
+  // Deep-link from the task-details page: upload a trimmed segment to Yoto.
+  const params = new URLSearchParams(location.search);
+  const trimId = params.get('yoto_trim');
+  if (trimId) {
+    history.replaceState(null, '', location.pathname);   // don't re-open on refresh
+    openYotoTrimModal(trimId, params.get('name') || '');
+  }
+}
+
+async function refreshYotoStatus() {
+  const chip = document.getElementById('yoto-chip');
+  try {
+    const r = await fetch('/api/yoto/status');
+    yotoStatus = await r.json();
+  } catch (e) { yotoStatus = null; }
+  chip.classList.remove('ok', 'warn');
+  if (!yotoStatus || !yotoStatus.bound) {
+    chip.textContent = 'Yoto: 未绑定'; chip.classList.add('warn');
+  } else if (!yotoStatus.authed) {
+    chip.textContent = 'Yoto: 待登录'; chip.classList.add('warn');
+  } else {
+    chip.textContent = 'Yoto: 已登录'; chip.classList.add('ok');
+  }
+  // Playlist page + its entry link are visible only to Yoto-authed users.
+  const plLink = document.getElementById('playlists-link');
+  if (plLink) plLink.style.display = (yotoStatus && yotoStatus.authed) ? '' : 'none';
+}
+
+async function doLogout() {
+  try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+  location.href = '/login';
+}
+
+function openBindModal() {
+  document.getElementById('bind-status').textContent = '';
+  document.getElementById('bind-code').value = '';
+  document.getElementById('bind-modal').style.display = 'flex';
+}
+function closeBindModal() {
+  document.getElementById('bind-modal').style.display = 'none';
+}
+
+async function bindYoto() {
+  const cid = document.getElementById('bind-cid').value.trim();
+  if (!cid) { showToast('请输入 client_id', 'er'); return; }
+  try {
+    const r = await fetch('/api/yoto/bind', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: cid })
+    });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.detail || '绑定失败'); }
+    showToast('已绑定 client_id'); await refreshYotoStatus();
+  } catch (e) { showToast(e.message, 'er'); }
+}
+
+async function getAuthUrl() {
+  const st = document.getElementById('bind-status');
+  st.textContent = '生成中…';
+  try {
+    const r = await fetch('/api/yoto/auth/url');
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || '无法生成链接');
+    window.open(d.url, '_blank');
+    st.textContent = '已打开登录页，登录后把回调地址粘到下方';
+  } catch (e) { st.textContent = ''; showToast(e.message, 'er'); }
+}
+
+async function completeAuth() {
+  const code = document.getElementById('bind-code').value.trim();
+  if (!code) { showToast('请粘贴回调地址或 code', 'er'); return; }
+  try {
+    const r = await fetch('/api/yoto/auth/exchange', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || '登录失败');
+    showToast('Yoto 登录成功');
+    await refreshYotoStatus();
+    closeBindModal();
+  } catch (e) { showToast(e.message, 'er'); }
+}
+
+// ─── Admin: user management ───────────────────────────────
+async function openAdminModal() {
+  document.getElementById('admin-modal').style.display = 'flex';
+  await loadAdminUsers();
+}
+function closeAdminModal() {
+  document.getElementById('admin-modal').style.display = 'none';
+}
+
+async function loadAdminUsers() {
+  const box = document.getElementById('admin-user-list');
+  box.innerHTML = '<div class="lm-hint">加载中…</div>';
+  try {
+    const r = await fetch('/api/admin/users');
+    if (!r.ok) throw new Error('无法加载用户');
+    const users = (await r.json()).users || [];
+    box.innerHTML = users.map(u => `
+      <div class="admin-row">
+        <span class="an">${esc(u.username)}</span>
+        ${u.is_admin ? '<span class="tag">管理员</span>' : ''}
+        <button onclick="adminResetPw('${u.uid}','${esc(u.username)}')">重置密码</button>
+        <button class="del" onclick="adminDeleteUser('${u.uid}','${esc(u.username)}')">删除</button>
+      </div>`).join('');
+  } catch (e) { box.innerHTML = '<div class="lm-hint">' + esc(e.message) + '</div>'; }
+}
+
+async function adminCreateUser() {
+  const name = document.getElementById('au-name').value.trim();
+  const pass = document.getElementById('au-pass').value;
+  const isAdmin = document.getElementById('au-admin').checked;
+  if (!name || !pass) { showToast('请输入用户名和初始密码', 'er'); return; }
+  try {
+    const r = await fetch('/api/admin/users', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: name, password: pass, is_admin: isAdmin })
+    });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.detail || '创建失败'); }
+    document.getElementById('au-name').value = '';
+    document.getElementById('au-pass').value = '';
+    document.getElementById('au-admin').checked = false;
+    showToast('已创建用户'); await loadAdminUsers();
+  } catch (e) { showToast(e.message, 'er'); }
+}
+
+async function adminResetPw(uid, name) {
+  const pw = prompt('为 ' + name + ' 设置新密码：');
+  if (!pw) return;
+  try {
+    const r = await fetch('/api/admin/users/' + uid + '/password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.detail || '重置失败'); }
+    showToast('已重置密码');
+  } catch (e) { showToast(e.message, 'er'); }
+}
+
+async function adminDeleteUser(uid, name) {
+  if (!confirm('删除用户 ' + name + '？其 Yoto 绑定与图标将一并清除。')) return;
+  try {
+    const r = await fetch('/api/admin/users/' + uid, { method: 'DELETE' });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.detail || '删除失败'); }
+    showToast('已删除'); await loadAdminUsers();
+  } catch (e) { showToast(e.message, 'er'); }
+}
+
+// ─── Init ─────────────────────────────────────────────────
+boot();
+restoreActive();
+loadHist();
+</script>
+</body>
+</html>

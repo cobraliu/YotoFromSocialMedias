@@ -1,0 +1,96 @@
+# Dependencies
+**/node_modules/
+.pnp/
+.pnp.js
+# NB: vendor/yoto_api is a tracked git submodule (fork of cdnninja/yoto_api) —
+# do not ignore it.
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+out/
+target/
+*.class
+
+# Large model / data files
+*.bin
+*.weights
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.parquet
+*.arrow
+*.safetensors
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.rar
+*.7z
+
+# Media
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.mp3
+*.wav
+*.flac
+
+# Logs & temp
+*.log
+*.tmp
+*.swp
+*.swo
+.cache/
+tmp/
+temp/
+
+# Secrets / env
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Yoto uploader
+.yoto/
+data/*/yoto/
+data/yoto_icons/
+.pytest_cache/

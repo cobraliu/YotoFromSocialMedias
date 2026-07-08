@@ -1,0 +1,3 @@
+[submodule "vendor/yoto_api"]
+	path = vendor/yoto_api
+	url = git@github-cobraliu:cobraliu/yoto_api.git
